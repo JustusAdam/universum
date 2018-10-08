@@ -9,6 +9,8 @@
 
 module Universum.VarArg
        ( SuperComposition(..)
+       , mkVarArg
+       , VarArg
        ) where
 
 -- $setup
@@ -16,6 +18,23 @@ module Universum.VarArg
 -- >>> import Universum.Container (null)
 -- >>> import Prelude (show)
 -- >>> import Data.List (zip5)
+
+import Data.Function ((.))
+
+-- | Class machinery to create var-arg functions
+class VarArg a b c d where
+  -- | A higher order function that turns a function from @[a]@ to @b@ into a variadic function from @a@'s to @b@.
+  --
+  -- As an example you can use it to create 'printf' like functions.
+  --
+  mkVarArg :: (d -> a) -> ([a] -> b) -> c
+instance VarArg a b c d => VarArg a b (d -> c) d where
+  mkVarArg g f a = mkVarArg g (f . (g a:))
+  {-# INLINE mkVarArg #-}
+instance VarArg a c c d where
+  mkVarArg _ f = f []
+  {-# INLINE mkVarArg #-}
+
 
 -- | This type class allows to implement variadic composition operator.
 class SuperComposition a b c | a b -> c where
